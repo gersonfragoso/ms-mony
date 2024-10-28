@@ -2,6 +2,7 @@ package com.mony.account.service.service_impl;
 
 
 import com.mony.account.dto.UserDTO;
+import com.mony.account.dto.request_dto.UserRequestDTO;
 import com.mony.account.mapper.UserMapper;
 import com.mony.account.model.UserAuth;
 import com.mony.account.model.UserModel;
@@ -13,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,16 +30,18 @@ public class UserServiceImpl implements UserService {
     private UserAuthRepository userAuthRepository;
 
     @Override
-    public Optional<ResponseEntity<UserDTO>> createUser(UserDTO user) {
-        if (!validateEmail(user.email())){
-            return Optional.of(ResponseEntity.badRequest().build());
+    public Optional<ResponseEntity<UserDTO>> createUser(UserRequestDTO userRequest) {
+        if (userRepository.existsByEmail(userRequest.email()) || userRepository.existsByCpf(userRequest.cpf())) {
+            return Optional.of(ResponseEntity.status(HttpStatus.CONFLICT).build());
         }
-        UserModel userToSave = UserMapper.toEntity(user);
+        UserModel userToSave = UserMapper.toEntity(userRequest);
         userRepository.save(userToSave);
+        UserDTO userDTO = UserMapper.toDTO(userToSave);
         return Optional.of(
                 ResponseEntity.status(HttpStatus.CREATED)
-                        .body(UserMapper.toDTO(userToSave)));
+                        .body(userDTO));
     }
+
 
     @Override
     public Optional<ResponseEntity<UserDTO>> userLogin(String email, String password) {
@@ -49,7 +55,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDTO> findAllUsers(int page, int size) {
-        return List.of();
+        //Pageable com a página e o tamanho especificados
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<UserModel> userPage = userRepository.findAll(pageable);
+
+        return userPage.getContent().stream()
+                .map(UserMapper::toDTO)
+                .toList();
     }
 
     @Override
@@ -67,14 +80,14 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
-    private String generateOTP(UUID userId){
+    private String generateOTP(UUID userId) {
         Optional<UserAuth> userAuth = userAuthRepository.findActiveByUserId(userId);
         String otpCode;
-        if(userAuth.isPresent()){
+        if (userAuth.isPresent()) {
             otpCode = userAuth.get().getOtpCode();
-        }else {
+        } else {
             otpCode = SecurityUtil.generateOtpCode();
-            userAuthRepository.save(new UserAuth(userId,otpCode,false));
+            userAuthRepository.save(new UserAuth(userId, otpCode, false));
         }
         return otpCode;
     }

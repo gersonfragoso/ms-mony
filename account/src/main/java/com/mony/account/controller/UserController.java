@@ -1,6 +1,7 @@
 package com.mony.account.controller;
 
 import com.mony.account.dto.UserDTO;
+import com.mony.account.dto.request_dto.UserRequestDTO;
 import com.mony.account.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class UserController {
 
     // Endpoint to create a user
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserRequestDTO user) {
         return userService.createUser(user)
                 .orElse(ResponseEntity.badRequest().build());
     }
