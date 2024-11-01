@@ -25,7 +25,7 @@ public class PaymentModel {
 
     private String nameCard;
 
-    private String number;
+    private String numberCard;
 
     private String dueDate;
 
