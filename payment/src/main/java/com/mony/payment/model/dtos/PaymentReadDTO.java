@@ -13,10 +13,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PaymentReadDTO {
     private UUID paymentId;
-    private String orderNumber;
+    private String orderCode;
     private BigDecimal value;
     private String cpf;
-    private String number;
+    private String numberCard;
     private LocalDateTime paymentDate;
     private UUID userId;
     private String nameUser;
