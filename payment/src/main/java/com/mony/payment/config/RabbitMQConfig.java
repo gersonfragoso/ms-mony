@@ -15,6 +15,7 @@ public class RabbitMQConfig {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
 
+    //Criação da fila de mensagens de confirmação: paymentQueue.
     @Bean
     public Queue paymentQueue() {
         return new Queue("paymentQueue", true);
