@@ -3,7 +3,9 @@ package com.mony.payment.mapper;
 import com.mony.payment.model.PaymentModel;
 import com.mony.payment.model.dtos.PaymentReadDTO;
 import com.mony.payment.model.dtos.PaymentWriteDTO;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PaymentMapper {
 
     // Converter de PaymentWriteDTO para PaymentModel
