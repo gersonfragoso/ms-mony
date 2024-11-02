@@ -9,11 +9,16 @@ import com.mony.payment.producer.PaymentProducer;
 import com.mony.payment.repository.PaymentRepository;
 import com.mony.payment.service.paymentgateway.PaymentGateway;
 import exception.PaymentProcessingException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class PaymentService {
@@ -40,7 +45,6 @@ public class PaymentService {
             }
 
             paymentModel = paymentRepository.save(paymentModel);
-
             paymentProducer.publishMessageEmail(paymentModel);
 
         } catch (Exception e) {
@@ -48,8 +52,37 @@ public class PaymentService {
             throw new PaymentProcessingException("Erro no processamento do pagamento. Operação Cancelada.", e);
         }
 
-        return PaymentMapper.toReadDTO(paymentModel);
+        return formatPaymentReadDTO(PaymentMapper.toReadDTO(paymentModel));
     }
 
+    public PaymentReadDTO getPaymentById(UUID paymentId) {
+        Optional<PaymentModel> optionalPaymentModel = paymentRepository.findById(paymentId);
 
+        if (optionalPaymentModel.isPresent()) {
+            return formatPaymentReadDTO(PaymentMapper.toReadDTO(optionalPaymentModel.get()));
+        } else {
+            throw new EntityNotFoundException("Pagamento não encontrado com ID: " + paymentId);
+        }
+    }
+
+    public Page<PaymentReadDTO> getPaymentsByCpf(String cpf, Pageable pageable) {
+        Optional<Page<PaymentModel>> optionalPaymentPage = paymentRepository.findAllByCpf(cpf, pageable);
+
+        //se encontrou resultados...
+        if (optionalPaymentPage.isPresent()) {
+            return optionalPaymentPage.get().map(paymentModel -> formatPaymentReadDTO(PaymentMapper.toReadDTO(paymentModel)));
+        } else {
+            // retorna uma página vazia caso não encontre pagamentos do cpf informado
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
+    }
+
+    private String formatNumberCard(String numberCard) {
+        return numberCard.replace(numberCard.substring(4, 12), "********");
+    }
+
+    private PaymentReadDTO formatPaymentReadDTO(PaymentReadDTO paymentReadDTO) {
+        paymentReadDTO.setNumberCard(formatNumberCard(paymentReadDTO.getNumberCard()));
+        return paymentReadDTO;
+    }
 }
