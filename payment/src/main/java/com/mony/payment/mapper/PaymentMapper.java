@@ -38,6 +38,7 @@ public class PaymentMapper {
         paymentReadDTO.setUserId(paymentModel.getUserId());
         paymentReadDTO.setNameUser(paymentModel.getNameUser());
         paymentReadDTO.setEmail(paymentModel.getEmail());
+        paymentReadDTO.setPaymentStatus(paymentModel.getPaymentStatus().toString());
         return paymentReadDTO;
     }
 }
