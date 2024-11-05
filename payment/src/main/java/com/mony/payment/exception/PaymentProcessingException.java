@@ -1,4 +1,4 @@
-package exception;
+package com.mony.payment.exception;
 
 public class PaymentProcessingException extends RuntimeException {
 

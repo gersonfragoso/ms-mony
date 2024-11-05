@@ -8,7 +8,7 @@ import com.mony.payment.model.enums.PaymentStatus;
 import com.mony.payment.producer.PaymentProducer;
 import com.mony.payment.repository.PaymentRepository;
 import com.mony.payment.service.paymentgateway.PaymentGateway;
-import exception.PaymentProcessingException;
+import com.mony.payment.exception.PaymentProcessingException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -49,6 +49,7 @@ public class PaymentService {
 
         } catch (Exception e) {
             paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
+            paymentModel = paymentRepository.save(paymentModel);
             throw new PaymentProcessingException("Erro no processamento do pagamento. Operação Cancelada.", e);
         }
 

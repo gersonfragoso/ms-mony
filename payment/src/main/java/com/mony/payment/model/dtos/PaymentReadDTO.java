@@ -21,4 +21,5 @@ public class PaymentReadDTO {
     private UUID userId;
     private String nameUser;
     private String email;
+    private String paymentStatus;
 }
