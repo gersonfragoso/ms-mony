@@ -15,8 +15,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,7 +45,11 @@ public class PaymentService {
         paymentModel.setPaymentStatus(PaymentStatus.CONFIRMED);
 
         try {
-            if (!paymentGateway.processPayment(paymentWriteDTO)) {
+            if(!verifyDueDateCard(paymentWriteDTO.dueDate())) {
+                paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
+                System.out.println("Cartao vencido");
+            }
+            else if (!paymentGateway.processPayment(paymentWriteDTO)){
                 paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
             }
 
@@ -85,5 +94,13 @@ public class PaymentService {
     private PaymentReadDTO formatPaymentReadDTO(PaymentReadDTO paymentReadDTO) {
         paymentReadDTO.setNumberCard(formatNumberCard(paymentReadDTO.getNumberCard()));
         return paymentReadDTO;
+    }
+
+    //Verifica se o cartõo é válido
+    private boolean verifyDueDateCard(String dueDate){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+        YearMonth today = YearMonth.now();
+        YearMonth dueDateFormatted = YearMonth.parse(dueDate, formatter);
+        return dueDateFormatted.isAfter(today);
     }
 }
