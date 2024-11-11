@@ -1,13 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<!-- Parent POM for Spring Boot -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.3.5</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 
 	<groupId>com.mony</groupId>
@@ -21,8 +22,15 @@
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>forplay-legacy</id>
+			<url>http://forplay.googlecode.com/svn/mavenrepo</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
-		<!-- Spring Boot Starters -->
+		<!-- Spring Boot Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp</artifactId>
@@ -59,48 +67,57 @@
 			<version>4.1.3</version>
 		</dependency>
 
-		<!-- Dependência para autenticação OAuth2 -->
+		<!-- Google API and OAuth2 Dependencies -->
 		<dependency>
 			<groupId>com.google.auth</groupId>
 			<artifactId>google-auth-library-oauth2-http</artifactId>
 			<version>1.16.0</version>
 		</dependency>
-
-		<!-- Biblioteca para acessar APIs do Google -->
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
-			<version>2.1.1</version>
+			<version>2.7.0</version>
 		</dependency>
-
-		<!-- Biblioteca específica para API do Gmail -->
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client-gson</artifactId>
+			<version>1.30.11</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.oauth-client</groupId>
+			<artifactId>google-oauth-client</artifactId>
+			<version>1.35.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.http-client</groupId>
+			<artifactId>google-http-client-gson</artifactId>
+			<version>1.41.0</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-gmail</artifactId>
 			<version>v1-rev110-1.25.0</version>
 		</dependency>
 
-		<!-- Biblioteca para JSON, caso precise lidar com o JSON das credenciais -->
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.10</version>
-		</dependency>
-		<!-- Jackson (used by Google API Client and others) -->
+
+
+
+
+		<!-- Jackson (Used by Google API Client and others) -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.18.1</version>
 		</dependency>
 
-		<!-- Database -->
+		<!-- PostgreSQL Database Driver -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Lombok for Code Simplification -->
+		<!-- Lombok (Used for reducing boilerplate code) -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -120,6 +137,7 @@
 		</dependency>
 	</dependencies>
 
+	<!-- Dependency Management for Spring Cloud -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -132,8 +150,17 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<!-- Build Configuration -->
 	<build>
 		<plugins>
+			<!-- Surefire Plugin for running tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.1</version>
+			</plugin>
+
+			<!-- Spring Boot Maven Plugin for packaging the application -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -148,11 +175,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>google</id>
-			<url>https://maven.google.com</url>
-		</repository>
-	</repositories>
 </project>

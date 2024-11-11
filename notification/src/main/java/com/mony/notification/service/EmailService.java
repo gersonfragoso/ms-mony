@@ -58,7 +58,7 @@ public class EmailService {
             Message message = new Message();
             message.setRaw(encodedEmail);
 
-            message = service.users().messages().send("me", message).execute();
+            Message sentMessage = service.users().messages().send("me", message).execute();
             System.out.println("Mensagem enviada com ID: " + message.getId());
         }
         catch (MessagingException e) {
