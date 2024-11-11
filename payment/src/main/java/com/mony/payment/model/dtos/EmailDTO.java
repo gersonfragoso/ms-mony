@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record EmailDTO(UUID paymentId,
-                       String orderNumber,
+                       String orderCode,
                        UUID userId,
                        String nameUser,
                        String emailTo,
                        BigDecimal value,
-                       String status)
+                       String paymentStatus)
 {
 }
