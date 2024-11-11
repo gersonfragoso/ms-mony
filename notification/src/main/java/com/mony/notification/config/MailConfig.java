@@ -8,9 +8,9 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.util.Properties;
 
-
+@Configuration
 public class MailConfig {
-   /* @Value("${spring.mail.host}")
+    @Value("${spring.mail.host}")
     private String host;
 
     @Value("${spring.mail.port}")
@@ -25,24 +25,17 @@ public class MailConfig {
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-
-        // Configurações do SMTP do Gmail
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
+        mailSender.setHost(host);
+        mailSender.setPort(port);
         mailSender.setUsername(username);
         mailSender.setPassword(password);
 
-        // Adicionar configurações de OAuth2 para autenticação
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.debug", "true");
 
-        // Configuração do OAuth2 (se você já configurou o OAuth2)
-        // O token de acesso será injetado na configuração via o OAuth2
-        props.put("mail.smtp.auth.mechanisms", "XOAUTH2");
-
         return mailSender;
-    }*/
+    }
 }
