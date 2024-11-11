@@ -20,7 +20,8 @@ public class GmailOAuth2 {
 
     public static Gmail getGmailService() throws IOException, GeneralSecurityException {
         // Carregar as credenciais OAuth2
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("src/main/java/com/mony/notification/config/credentials/credentials.json"))
+        String path = "credentials.json";
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
                 .createScoped(Collections.singleton(GmailScopes.GMAIL_SEND));
 
         // Criação do serviço Gmail
