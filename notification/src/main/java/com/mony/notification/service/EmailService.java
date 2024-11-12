@@ -1,83 +1,47 @@
 package com.mony.notification.service;
 
-import com.google.api.client.json.JsonFactory;
-import com.google.api.services.gmail.model.Message;
-import com.google.api.services.gmail.Gmail;
-import com.mony.notification.config.GmailOAuth2;
+
 import com.mony.notification.dtos.PaymentEmailConfirmationDto;
 import com.mony.notification.model.EmailModel;
 import com.mony.notification.model.enums.EmailStatus;
 import com.mony.notification.repository.EmailRepository;
-import jakarta.mail.MessagingException;
-import jakarta.mail.Session;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.Properties;
+
 
 @Service
 public class EmailService {
     private final EmailRepository emailRepository;
-    //private final JavaMailSender mailSender;
-    //private static final String CLIENT_SECRET_FILE = "../config/credentials/client_secret.json";
+    private final JavaMailSender mailSender;
 
     private final String EMAIL_FROM = "atendimento.msmony@gmail.com";
 
-    public EmailService(EmailRepository emailRepository) {
+    public EmailService(EmailRepository emailRepository, JavaMailSender mailSender) {
         this.emailRepository = emailRepository;
+        this.mailSender = mailSender;
 
     }
 
     public void sendEmail(EmailModel emailModel) {
         try{
-            Gmail service = GmailOAuth2.getGmailService();
-            Properties props = new Properties();
-            Session session = Session.getDefaultInstance(props, null);
-            MimeMessage email = new MimeMessage(session);
-            email.setFrom(new InternetAddress(EMAIL_FROM));
-            email.addRecipient(jakarta.mail.Message.RecipientType.TO, new InternetAddress(emailModel.getReceiver()));
+            SimpleMailMessage email = new SimpleMailMessage();
+            email.setTo(emailModel.getReceiver());
+            email.setFrom(EMAIL_FROM);
             email.setSubject(emailModel.getSubject());
             email.setText(emailModel.getBody());
+            emailModel.setStatus(EmailStatus.SENT);
+            emailModel.setEmailSentDate(LocalDateTime.now());
+            mailSender.send(email);
 
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            email.writeTo(buffer);
-            byte[] rawMessageBytes = buffer.toByteArray();
-            String encodedEmail = Base64.getEncoder().encodeToString(rawMessageBytes);
-
-            Message message = new Message();
-            message.setRaw(encodedEmail);
-
-            Message sentMessage = service.users().messages().send("me", message).execute();
-            System.out.println("Mensagem enviada com ID: " + message.getId());
+        } catch(RuntimeException e){
+            emailModel.setStatus(EmailStatus.ERROR);
+            System.out.println(e.getMessage());
         }
-        catch (MessagingException e) {
-            System.err.println("Erro ao compor o email: " + e.getMessage());
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.err.println("Erro de I/O ao enviar o email: " + e.getMessage());
-            e.printStackTrace();
-        } catch (GeneralSecurityException e) {
-            System.err.println("Erro de segurança ao configurar o Gmail service: " + e.getMessage());
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.err.println("Erro inesperado: " + e.getMessage());
-            e.printStackTrace();
-        }
-        finally {
+        finally{
             emailRepository.save(emailModel);
         }
-
     }
 
     public EmailModel createPaymentConfirmationEmail(PaymentEmailConfirmationDto paymentConfDto) {
@@ -87,9 +51,9 @@ public class EmailService {
         emailModel.setReceiver(paymentConfDto.emailTo());
         emailModel.setSender(EMAIL_FROM);
         emailModel.setSubject("Pagamento - Pedido nº: #"+paymentConfDto.orderCode());
-        emailModel.setBody(String.format("Prezado(a) "+paymentConfDto.nameUser()+"\nO pagamento" +
-                "#"+paymentConfDto.paymentId()+" no valor de R$"+paymentConfDto.value()+"foi "+status+
-                "\nCordialmente, equipe Acabou o Mony."));
+        emailModel.setBody(String.format("Prezado(a) "+paymentConfDto.nameUser()+","+"\nO pagamento " +
+                "#"+paymentConfDto.paymentId()+" no valor de R$"+paymentConfDto.value()+" foi "+status+
+                "."+"\n\nCordialmente, equipe Acabou o Mony."));
         return emailModel;
     }
 
