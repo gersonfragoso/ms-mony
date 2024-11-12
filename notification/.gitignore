@@ -3,6 +3,8 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+notification/src/main/java/com/mony/notification/config/credentials.json
+
 
 ### STS ###
 .apt_generated
