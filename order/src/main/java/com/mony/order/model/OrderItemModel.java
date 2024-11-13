@@ -17,11 +17,12 @@ public class OrderItemModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String productName;
-    private int quantity;
+    private Integer quantity;
     private BigDecimal price;
 
     @ManyToOne
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", nullable = false)
     private OrderModel order;
 }
