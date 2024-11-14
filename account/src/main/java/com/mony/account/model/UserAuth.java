@@ -19,7 +19,7 @@ import java.util.UUID;
 public class UserAuth {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // ou GenerationType.AUTO, dependendo do banco
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private UUID userId;
