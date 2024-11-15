@@ -1,8 +1,8 @@
 package com.mony.order.dto;
 
 import com.mony.order.enums.OrderStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 
@@ -20,10 +20,11 @@ public record OrderDTO(
         @DecimalMin(value = "0.0", inclusive = false, message = "O total do pedido deve ser maior que zero")
         BigDecimal totalAmount,
 
-        @NotBlank(message = "O status do pedido é obrigatório")
+        @NotNull(message = "O status do pedido é obrigatório")
         OrderStatus status,
 
         @NotNull(message = "A lista de itens não pode ser nula")
+        @Valid
         List<OrderItemDTO> items,
 
         @NotNull(message = "O ID do cliente é obrigatório")

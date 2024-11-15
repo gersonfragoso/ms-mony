@@ -1,10 +1,7 @@
 package com.mony.order.service.service_impl;
 
 import com.mony.order.dto.OrderDTO;
-import com.mony.order.dto.OrderItemDTO;
-import com.mony.order.enums.OrderStatus;
 import com.mony.order.exception.ResourceNotFoundException;
-import com.mony.order.mapper.OrderItemMapper;
 import com.mony.order.mapper.OrderMapper;
 import com.mony.order.model.OrderItemModel;
 import com.mony.order.model.OrderModel;
@@ -87,7 +84,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void deleteOrder(Long orderId) {
-        orderRepository.deleteById(orderId);
+        OrderModel order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID " + orderId));
+
+        orderRepository.delete(order);
     }
 
     @Override
