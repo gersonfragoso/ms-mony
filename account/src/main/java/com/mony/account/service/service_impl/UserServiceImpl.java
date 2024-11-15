@@ -127,6 +127,7 @@ public class UserServiceImpl {
         UserModel user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
         return UserMapper.toDTO(user);
     }
+    //so pra subir
 
     private void validateCpf(String cpf){
         boolean cpfSalvo = userRepository.existsByCpf(cpf);
