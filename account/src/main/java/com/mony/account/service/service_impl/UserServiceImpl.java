@@ -1,5 +1,8 @@
 package com.mony.account.service.service_impl;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.mony.account.dto.UserDTO;
 import com.mony.account.dto.request_dto.LoginRequestDTO;
 import com.mony.account.dto.request_dto.UserUpdateDTO;
@@ -22,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.util.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.*;
 
@@ -40,6 +45,8 @@ public class UserServiceImpl {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Value("${jwt.secret}")
+    private String secretKey;
 
 
     public void createUser(UserModel user){
@@ -106,21 +113,44 @@ public class UserServiceImpl {
         ResponseEntity.notFound().build();
     }
 
-    public void updateUser(UserUpdateDTO userDTO) {
-        validateEmail(userDTO.email());
-        UserModel users = userRepository.findById(userDTO.userId()).orElseThrow(NoSuchElementException::new);
-        if (userDTO.name() != null && !userDTO.name().isEmpty()) {
-            users.setNome(userDTO.name());
+    public void updateUser(String token, UserUpdateDTO userDTO) {
+        // Extrair o userId do token
+        String userId = extractUserIdFromToken(token);
+        // Buscar o usuário no banco de dados
+        UserModel user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado"));
+        // Atualizar os dados fornecidos no DTO
+        if (StringUtils.hasText(userDTO.name())) {
+            user.setNome(userDTO.name());
         }
-        if (userDTO.email() != null && !userDTO.email().isEmpty()) {
-            users.setEmail(userDTO.email());
+        if (StringUtils.hasText(userDTO.email())) {
+            validateEmail(userDTO.email());
+            user.setEmail(userDTO.email());
+        }
+        // Salvar as alterações
+        log.info(user.getNome());
+        log.info(userDTO.name());
+        userRepository.save(user);
+    }
+    public String extractUserIdFromToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secretKey);
+            return JWT.require(algorithm)
+                    .withIssuer("solutis-squad1")
+                    .build()
+                    .verify(token)
+                    .getClaim("userId")
+                    .asString();
+        } catch (JWTVerificationException e) {
+            throw new RuntimeException("Token inválido ou expirado", e);
         }
     }
 
+
     private void validateEmail(String email) {
         Optional<UserModel> emailsSaved = userRepository.findByEmail(email);
-        if (emailsSaved.equals(email)) {
-            throw new EntityExistsException("Email ja está em uso");
+        if (emailsSaved.isPresent()) {
+            throw new EntityExistsException("Email já está em uso");
         }
     }
     private UserDTO detailUser(UUID userId){

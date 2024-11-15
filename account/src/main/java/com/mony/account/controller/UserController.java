@@ -50,9 +50,13 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    @SecurityRequirement(name = "bearer-key")
-    public ResponseEntity<?> updateUser(@RequestBody UserUpdateDTO userUpdateDTO) {
-        return ResponseEntity.ok().body("Usuario atulizado!" + userUpdateDTO);
+    public ResponseEntity<Void> updateUser(@RequestHeader("Authorization") String authorizationHeader,
+                                           @RequestBody UserUpdateDTO userDTO) {
+        // Extrair o token do cabeçalho
+        String token = authorizationHeader.replace("Bearer ", "");
+        // Atualizar o usuário
+        userService.updateUser(token, userDTO);
+        return ResponseEntity.ok().build();
     }
 
 
