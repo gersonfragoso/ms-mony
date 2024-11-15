@@ -29,6 +29,7 @@ public class TokenService {
             return JWT.create()
                     .withIssuer("solutis-squad1")
                     .withSubject(user.getEmail())
+                    .withClaim("userId", user.getId().toString())
                     .withExpiresAt(Date.from(tokenExpirate()))
                     .sign(algorithm);
         } catch (JWTCreationException e) {
