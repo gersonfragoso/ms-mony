@@ -27,8 +27,6 @@ public class UserController {
     @Autowired
     private UserServiceImpl userService;
 
-
-
     @GetMapping
     public ResponseEntity<List<UserDTO>> findAllUsers(@RequestParam int page, @RequestParam int size) {
         List<UserDTO> users = userService.findAllUsers(page, size);
