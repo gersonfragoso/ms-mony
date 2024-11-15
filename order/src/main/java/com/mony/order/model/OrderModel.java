@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @AllArgsConstructor
@@ -20,14 +20,15 @@ public class OrderModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private LocalDateTime orderDate;
+
+    private LocalDate orderDate;
     private BigDecimal totalAmount;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING)  // Para armazenar o valor do enum como string no banco de dados
     private OrderStatus status;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemModel> items;
-    private Long customerId;
 
+    private Long customerId;
 }

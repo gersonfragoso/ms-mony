@@ -2,41 +2,31 @@ package com.mony.order.mapper;
 
 import com.mony.order.dto.OrderItemDTO;
 import com.mony.order.model.OrderItemModel;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
+@Component
 public class OrderItemMapper {
 
-    public static OrderItemDTO toDTO(OrderItemModel orderItem) {
+    // Converte de OrderItemDTO para OrderItemModel
+    public static OrderItemModel toModel(OrderItemDTO orderItemDTO) {
+        OrderItemModel orderItemModel = new OrderItemModel();
+        orderItemModel.setId(orderItemDTO.id());
+        orderItemModel.setProductName(orderItemDTO.productName());
+        orderItemModel.setQuantity(orderItemDTO.quantity());
+        orderItemModel.setPrice(orderItemDTO.price());
+
+        return orderItemModel;
+    }
+
+    // Converte de OrderItemModel para OrderItemDTO
+    public static OrderItemDTO toDTO(OrderItemModel orderItemModel) {
         return new OrderItemDTO(
-                orderItem.getId(),
-                orderItem.getProductName(),
-                orderItem.getQuantity(),
-                orderItem.getPrice(),
-                orderItem.getOrder().getId()
+                orderItemModel.getId(),
+                orderItemModel.getProductName(),
+                orderItemModel.getQuantity(),
+                orderItemModel.getPrice(),
+                orderItemModel.getOrder().getId()
         );
-    }
-
-    public static OrderItemModel toEntity(OrderItemDTO orderItemDTO) {
-        return new OrderItemModel(
-                null,
-                orderItemDTO.productName(),
-                orderItemDTO.quantity(),
-                orderItemDTO.price(),
-                null
-        );
-    }
-
-    public static List<OrderItemDTO> toDTOList(List<OrderItemModel> orderItems) {
-        return orderItems.stream()
-                .map(OrderItemMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    public static List<OrderItemModel> toEntityList(List<OrderItemDTO> orderItemDTOs) {
-        return orderItemDTOs.stream()
-                .map(OrderItemMapper::toEntity)
-                .collect(Collectors.toList());
     }
 }

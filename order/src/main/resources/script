@@ -1,0 +1,68 @@
+-- Criar tabela de pedidos
+CREATE TABLE order_table (
+    id SERIAL PRIMARY KEY,
+    order_date DATE NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    customer_id BIGINT NOT NULL
+);
+
+-- Criar tabela de itens do pedido
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    product_name VARCHAR(100) NOT NULL,
+    quantity INTEGER NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    CONSTRAINT fk_order FOREIGN KEY (order_id) REFERENCES order_table(id) ON DELETE CASCADE
+);
+
+
+--teste requisições
+
+
+POST http://localhost:8082/orders
+
+{
+    "orderDate": "2024-11-12",
+    "totalAmount": 200.0,
+    "status": "PENDING",
+    "customerId": 1,
+    "items": [
+        {
+            "productName": "Produto A",
+            "quantity": 2,
+            "price": 50.0
+        }
+    ]
+}
+________________________________________
+
+GET http://localhost:8082/orders
+GET http://localhost:8082/orders/{id}
+________________________________________
+
+PUT http://localhost:8082/orders/1
+
+{
+    "orderDate": "2024-11-12",
+    "totalAmount": 200.0,
+    "status": "PENDING",
+    "customerId": 1,
+    "items": [
+        {
+            "productName": "Produto Z",
+            "quantity": 4,
+            "price": 55.0,
+            "orderId": 1
+        },
+        {
+            "productName": "Produto E",
+            "quantity": 2,
+            "price": 95.0,
+            "orderId": 1
+        }
+    ]
+}
+
+_______________________________________
