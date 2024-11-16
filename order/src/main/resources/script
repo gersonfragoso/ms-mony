@@ -1,24 +1,29 @@
 -- Criar tabela de pedidos
 CREATE TABLE order_table (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_date DATE NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
     status VARCHAR(50) NOT NULL,
-    customer_id BIGINT NOT NULL
+    customer_id UUID NOT NULL
 );
 
 -- Criar tabela de itens do pedido
 CREATE TABLE order_items (
-    id SERIAL PRIMARY KEY,
-    order_id BIGINT NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID NOT NULL,
     product_name VARCHAR(100) NOT NULL,
     quantity INTEGER NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     CONSTRAINT fk_order FOREIGN KEY (order_id) REFERENCES order_table(id) ON DELETE CASCADE
 );
 
+_________________________________________________
+OBS: rodar comando para gerar UUID no postgre
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
---teste requisições
+__________________________________________________
+
+teste requisições
 
 
 POST http://localhost:8082/orders
@@ -36,11 +41,11 @@ POST http://localhost:8082/orders
         }
     ]
 }
-________________________________________
+__________________________________________________
 
 GET http://localhost:8082/orders
 GET http://localhost:8082/orders/{id}
-________________________________________
+__________________________________________________
 
 PUT http://localhost:8082/orders/1
 
@@ -65,4 +70,4 @@ PUT http://localhost:8082/orders/1
     ]
 }
 
-_______________________________________
+__________________________________________________

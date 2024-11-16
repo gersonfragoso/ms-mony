@@ -1,5 +1,5 @@
 package com.mony.order.integration;
-
+/*
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -7,3 +7,4 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class JwtInterceptor implements HandlerInterceptor {
 
 }
+*/

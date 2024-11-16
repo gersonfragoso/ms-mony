@@ -1,8 +1,8 @@
 package com.mony.order.service.service_impl;
 
 import com.mony.order.dto.OrderDTO;
+import com.mony.order.enums.OrderStatus;
 import com.mony.order.exception.ResourceNotFoundException;
-import com.mony.order.integration.AccountFeignClient;
 import com.mony.order.mapper.OrderMapper;
 import com.mony.order.model.OrderItemModel;
 import com.mony.order.model.OrderModel;
@@ -30,14 +30,16 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
+    /*
     @Autowired
     private AccountFeignClient accountFeignClient;
-
+*/
     @Override
     public OrderDTO createOrder(OrderDTO orderDTO, UUID userId) {
         OrderModel orderModel = orderMapper.toModel(orderDTO);
         orderModel.setCustomerId(userId);
-        
+        orderModel.setStatus(OrderStatus.PENDING);
+
         BigDecimal totalAmount = orderModel.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -51,13 +53,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDTO updateOrder(Long orderId, OrderDTO orderDTO) {
+    public OrderDTO updateOrder(UUID orderId, OrderDTO orderDTO) {
         OrderModel orderModel = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID: " + orderId));
 
         orderModel.setOrderDate(orderDTO.orderDate());
         orderModel.setTotalAmount(orderDTO.totalAmount());
-        orderModel.setStatus(orderDTO.status());
         orderModel.setCustomerId(orderDTO.customerId());
 
         orderModel.getItems().clear();
@@ -81,7 +82,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDTO getOrderById(Long orderId) {
+    public OrderDTO getOrderById(UUID orderId) {
         Optional<OrderModel> orderOptional = orderRepository.findById(orderId);
         if (orderOptional.isEmpty()) {
             throw new ResourceNotFoundException("Pedido não encontrado com o ID: " + orderId);
@@ -89,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
         return OrderMapper.toDTO(orderOptional.get());
     }
 
-    public void deleteOrder(Long orderId) {
+    public void deleteOrder(UUID orderId) {
         OrderModel order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID " + orderId));
 

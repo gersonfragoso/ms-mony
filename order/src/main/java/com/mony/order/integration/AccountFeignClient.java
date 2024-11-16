@@ -1,13 +1,15 @@
 package com.mony.order.integration;
 
-import com.mony.order.dto.LoginRequestDTO;
+/*
+import com.mony.order.dto.UserInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name="account")
+import java.util.UUID;
+@FeignClient(name = "account-service", url = "http://localhost:8081")
 public interface AccountFeignClient {
-    @PostMapping("/api/users/login")
-    ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO);
+
+    @GetMapping("/users/{userId}")
+    UserInfoDTO getUserInfo(@PathVariable UUID userId, @RequestHeader("Authorization") String token);
 }
+*/

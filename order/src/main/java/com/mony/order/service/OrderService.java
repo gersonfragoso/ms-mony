@@ -8,8 +8,8 @@ import java.util.UUID;
 public interface OrderService {
 
     OrderDTO createOrder(OrderDTO orderDTO, UUID userId);
-    OrderDTO updateOrder(Long orderId, OrderDTO orderDTO);
-    OrderDTO getOrderById(Long orderId);
+    OrderDTO updateOrder(UUID orderId, OrderDTO orderDTO);
+    OrderDTO getOrderById(UUID orderId);
     List<OrderDTO> getAllOrders();
-    void deleteOrder(Long orderId);
+    void deleteOrder(UUID orderId);
 }

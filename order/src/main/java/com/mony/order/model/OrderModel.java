@@ -20,7 +20,7 @@ public class OrderModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     private LocalDate orderDate;
     private BigDecimal totalAmount;

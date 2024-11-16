@@ -7,6 +7,7 @@ import com.mony.order.model.OrderModel;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -18,8 +19,7 @@ public class OrderMapper {
         orderModel.setId(orderDTO.id());
         orderModel.setOrderDate(orderDTO.orderDate());
         orderModel.setTotalAmount(orderDTO.totalAmount());
-        orderModel.setStatus(orderDTO.status());
-        orderModel.setCustomerId(orderDTO.customerId());
+        orderModel.setCustomerId(UUID.fromString(orderDTO.customerId().toString()));
 
         // Converte os itens manualmente
         List<OrderItemModel> items = orderDTO.items().stream()
@@ -40,7 +40,6 @@ public class OrderMapper {
                 orderModel.getId(),
                 orderModel.getOrderDate(),
                 orderModel.getTotalAmount(),
-                orderModel.getStatus(),
                 itemsDTO,
                 orderModel.getCustomerId()
         );

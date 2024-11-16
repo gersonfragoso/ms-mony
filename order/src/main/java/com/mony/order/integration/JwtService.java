@@ -1,5 +1,5 @@
 package com.mony.order.integration;
-
+/*
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import com.mony.order.dto.UserInfoDTO;
@@ -25,7 +25,7 @@ public class JwtService {
 
         return "Payload: " + decodedPayload;
     }*/
-
+/*
     public UserInfoDTO extractUserInfo(String token) {
         // Decodificando o token JWT
         DecodedJWT decodedJWT = JWT.decode(token);
@@ -54,3 +54,5 @@ public class JwtService {
 
 
 }
+
+*/
