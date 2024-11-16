@@ -92,6 +92,28 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!--JWT-->
+		<dependency>
+			<groupId>com.auth0</groupId>
+			<artifactId>java-jwt</artifactId>
+			<version>4.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId> <!-- Para suporte a JSON com Jackson -->
+			<version>0.11.2</version>
+		</dependency>
+
 		<!-- Validation -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
