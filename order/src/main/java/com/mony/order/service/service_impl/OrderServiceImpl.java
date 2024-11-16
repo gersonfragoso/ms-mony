@@ -1,6 +1,7 @@
 package com.mony.order.service.service_impl;
 
 import com.mony.order.dto.OrderDTO;
+import com.mony.order.enums.OrderStatus;
 import com.mony.order.exception.ResourceNotFoundException;
 import com.mony.order.mapper.OrderMapper;
 import com.mony.order.model.OrderItemModel;
@@ -8,12 +9,14 @@ import com.mony.order.model.OrderModel;
 import com.mony.order.repository.OrderItemRepository;
 import com.mony.order.repository.OrderRepository;
 import com.mony.order.service.OrderService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,35 +31,44 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
+    /*
+    @Autowired
+    private AccountFeignClient accountFeignClient;
+*/
     @Override
+    @Transactional
     public OrderDTO createOrder(OrderDTO orderDTO) {
-        OrderModel orderModel = orderMapper.toModel(orderDTO);
-        
+        // Converte o DTO para modelo (entidade)
+        OrderModel orderModel = OrderMapper.toModel(orderDTO);
+        orderModel.setStatus(OrderStatus.PENDING);
+
+        // Calcula o total do pedido
         BigDecimal totalAmount = orderModel.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         orderModel.setTotalAmount(totalAmount);
 
+        // Garante que todos os itens estão associados ao pedido
         orderModel.getItems().forEach(item -> item.setOrder(orderModel));
 
-        OrderModel savedOrder = orderRepository.save(orderModel);
+        // Persiste o pedido e seus itens
+        OrderModel savedOrder = orderRepository.save(orderModel); // Isso vai salvar o pedido e seus itens devido ao Cascade
 
-        return orderMapper.toDTO(savedOrder);
+        return OrderMapper.toDTO(savedOrder);
     }
 
     @Override
-    public OrderDTO updateOrder(Long orderId, OrderDTO orderDTO) {
+    public OrderDTO updateOrder(UUID orderId, OrderDTO orderDTO) {
         OrderModel orderModel = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID: " + orderId));
 
-        orderModel.setOrderDate(orderDTO.orderDate());
-        orderModel.setTotalAmount(orderDTO.totalAmount());
-        orderModel.setStatus(orderDTO.status());
-        orderModel.setCustomerId(orderDTO.customerId());
+        orderModel.setOrderDate(orderDTO.getOrderDate());
+        orderModel.setTotalAmount(orderDTO.getTotalAmount());
+        orderModel.setCustomerId(orderDTO.getCustomerId());
 
         orderModel.getItems().clear();
 
-        List<OrderItemModel> updatedItems = orderDTO.items().stream()
+        List<OrderItemModel> updatedItems = orderDTO.getItems().stream()
                 .map(itemDTO -> {
                     OrderItemModel item = new OrderItemModel();
                     item.setProductName(itemDTO.productName());
@@ -71,11 +83,11 @@ public class OrderServiceImpl implements OrderService {
 
         OrderModel updatedOrder = orderRepository.save(orderModel);
 
-        return orderMapper.toDTO(updatedOrder);
+        return OrderMapper.toDTO(updatedOrder);
     }
 
     @Override
-    public OrderDTO getOrderById(Long orderId) {
+    public OrderDTO getOrderById(UUID orderId) {
         Optional<OrderModel> orderOptional = orderRepository.findById(orderId);
         if (orderOptional.isEmpty()) {
             throw new ResourceNotFoundException("Pedido não encontrado com o ID: " + orderId);
@@ -83,7 +95,7 @@ public class OrderServiceImpl implements OrderService {
         return OrderMapper.toDTO(orderOptional.get());
     }
 
-    public void deleteOrder(Long orderId) {
+    public void deleteOrder(UUID orderId) {
         OrderModel order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID " + orderId));
 
