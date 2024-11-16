@@ -1,7 +1,9 @@
 package com.mony.payment.service;
 
+import com.mony.payment.integration.OrderFeignClient;
 import com.mony.payment.mapper.PaymentMapper;
 import com.mony.payment.model.PaymentModel;
+import com.mony.payment.model.dtos.OrderDTO;
 import com.mony.payment.model.dtos.PaymentReadDTO;
 import com.mony.payment.model.dtos.PaymentWriteDTO;
 import com.mony.payment.model.enums.PaymentStatus;
@@ -31,13 +33,31 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentProducer paymentProducer;
     private final PaymentGateway paymentGateway;
+    private final OrderFeignClient orderFeignClient;
 
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository, PaymentProducer paymentProducer, PaymentGateway paymentGateway) {
+    public PaymentService(PaymentRepository paymentRepository, PaymentProducer paymentProducer,
+                          PaymentGateway paymentGateway, OrderFeignClient orderFeignClient) {
         this.paymentRepository = paymentRepository;
         this.paymentProducer = paymentProducer;
         this.paymentGateway = paymentGateway;
+        this.orderFeignClient = orderFeignClient;
     }
+
+    public OrderDTO getOrderByIdFromFeign(UUID orderId) {
+        try{
+            OrderDTO orderDTO;
+            orderDTO = orderFeignClient.getOrderById(orderId);
+            return orderDTO;
+        } catch(EntityNotFoundException e){
+            return null;
+        }
+    }
+
+    public boolean compareOrderId(UUID userIdFromOrder, UUID userIdFromToken){
+        return userIdFromOrder.equals(userIdFromToken);
+    }
+
 
     public PaymentReadDTO processPayment(PaymentWriteDTO paymentWriteDTO) {
         PaymentModel paymentModel = PaymentMapper.toEntity(paymentWriteDTO);
