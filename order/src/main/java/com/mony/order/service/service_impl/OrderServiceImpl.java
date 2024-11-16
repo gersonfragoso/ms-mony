@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,8 +34,9 @@ public class OrderServiceImpl implements OrderService {
     private AccountFeignClient accountFeignClient;
 
     @Override
-    public OrderDTO createOrder(OrderDTO orderDTO) {
+    public OrderDTO createOrder(OrderDTO orderDTO, UUID userId) {
         OrderModel orderModel = orderMapper.toModel(orderDTO);
+        orderModel.setCustomerId(userId);
         
         BigDecimal totalAmount = orderModel.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))

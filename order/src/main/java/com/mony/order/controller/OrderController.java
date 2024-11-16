@@ -1,6 +1,7 @@
 package com.mony.order.controller;
 
 import com.mony.order.dto.OrderDTO;
+import com.mony.order.dto.UserInfoDTO;
 import com.mony.order.exception.ResourceNotFoundException;
 import com.mony.order.integration.JwtService;
 import com.mony.order.service.OrderService;
@@ -27,8 +28,31 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderDTO createOrder(@Valid @RequestBody OrderDTO orderDTO) {
-        return orderService.createOrder(orderDTO);
+    public OrderDTO createOrder(@Valid @RequestBody OrderDTO orderDTO, @RequestHeader String token) {
+        // Verifica se o token está expirado
+        if (jwtService.isTokenExpired(token)) {
+            throw new ResourceNotFoundException("Token expirado.");
+        }
+
+        try {
+            // Extrai as informações do token
+            UserInfoDTO userInfoDTO = jwtService.extractUserInfo(token);
+
+            // Verifica se o userId foi extraído corretamente
+            if (userInfoDTO.getUserId() == null) {
+                throw new ResourceNotFoundException("User ID não encontrado no token.");
+            }
+
+            // Chama o serviço para criar o pedido
+            return orderService.createOrder(orderDTO, userInfoDTO.getUserId());
+
+        } catch (IllegalArgumentException e) {
+            // Lidar com o caso de erro ao converter userId para UUID
+            throw new ResourceNotFoundException("User ID inválido no token.");
+        } catch (Exception e) {
+            // Captura outras exceções e retorna uma mensagem genérica
+            throw new ResourceNotFoundException("Erro ao processar o token.");
+        }
     }
 
     @PutMapping("/{orderId}")
@@ -46,10 +70,7 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
-    @GetMapping("/token/{token}")
-    public String testTokenValidation(@PathVariable String token){
-        return jwtService.validateToken(token);
-    }
+
 
     @DeleteMapping("/{orderId}")
     public ResponseEntity<String> deleteOrder(@PathVariable Long orderId) {

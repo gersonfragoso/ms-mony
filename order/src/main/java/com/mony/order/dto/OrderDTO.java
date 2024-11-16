@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public record OrderDTO(
         Long id,
@@ -28,7 +29,7 @@ public record OrderDTO(
         List<OrderItemDTO> items,
 
         @NotNull(message = "O ID do cliente é obrigatório")
-        Long customerId
+        UUID customerId
 ) {
     // Inicializando a lista de itens para evitar NPE (NullPointerException)
     public OrderDTO {

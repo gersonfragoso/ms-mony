@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 //réplica do LoginRequestDTO de account.
+//
 @Getter
 @Setter
 public class LoginRequestDTO {
