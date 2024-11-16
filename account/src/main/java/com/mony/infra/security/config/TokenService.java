@@ -30,6 +30,8 @@ public class TokenService {
                     .withIssuer("solutis-squad1")
                     .withSubject(user.getEmail())
                     .withExpiresAt(Date.from(tokenExpirate()))
+                    .withClaim("userId", user.getId().toString())
+                    .withClaim("username", user.getNome())
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             throw new RuntimeException("Erro ao gerar token",e);

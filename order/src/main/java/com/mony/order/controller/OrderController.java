@@ -2,6 +2,7 @@ package com.mony.order.controller;
 
 import com.mony.order.dto.OrderDTO;
 import com.mony.order.exception.ResourceNotFoundException;
+import com.mony.order.integration.JwtService;
 import com.mony.order.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,12 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final JwtService jwtService;
 
     @Autowired
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, JwtService jwtService) {
         this.orderService = orderService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping
@@ -43,6 +46,11 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
+    @GetMapping("/token/{token}")
+    public String testTokenValidation(@PathVariable String token){
+        return jwtService.validateToken(token);
+    }
+
     @DeleteMapping("/{orderId}")
     public ResponseEntity<String> deleteOrder(@PathVariable Long orderId) {
         try {
@@ -52,4 +60,6 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pedido não encontrado!");
         }
     }
+
+
 }

@@ -2,6 +2,7 @@ package com.mony.order.service.service_impl;
 
 import com.mony.order.dto.OrderDTO;
 import com.mony.order.exception.ResourceNotFoundException;
+import com.mony.order.integration.AccountFeignClient;
 import com.mony.order.mapper.OrderMapper;
 import com.mony.order.model.OrderItemModel;
 import com.mony.order.model.OrderModel;
@@ -27,6 +28,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private AccountFeignClient accountFeignClient;
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDTO) {
