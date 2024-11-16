@@ -11,4 +11,5 @@ public class UserInfoDTO {
     private UUID userId;
     private String name;
     private String email;
+    private String cpf;
 }

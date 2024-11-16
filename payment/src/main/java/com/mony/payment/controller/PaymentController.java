@@ -1,7 +1,8 @@
 package com.mony.payment.controller;
 
-import com.mony.payment.model.dtos.PaymentReadDTO;
-import com.mony.payment.model.dtos.PaymentWriteDTO;
+import com.mony.payment.exception.TokenExpiredException;
+import com.mony.payment.integration.JwtService;
+import com.mony.payment.model.dtos.*;
 import com.mony.payment.service.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -28,9 +29,11 @@ import java.util.UUID;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final JwtService jwtService;
 
     @Autowired
-    public PaymentController(PaymentService paymentService) {
+    public PaymentController(PaymentService paymentService, JwtService jwtService) {
+        this.jwtService = jwtService;
         this.paymentService = paymentService;
     }
 
@@ -59,7 +62,7 @@ public class PaymentController {
     }
 
     /*Exemplo de URL para a requisição:
-    http://localhost:8081/payments/id/UUID-AQUI
+    http://localhost:8087/payments/id/UUID-AQUI
     * */
     @Operation(summary = "Obter pagamento por ID [URL PATH]", description = "Recupera o pagamento utilizando" +
             " o ID fornecido diretamente na URL.")
@@ -81,7 +84,7 @@ public class PaymentController {
     }
 
     /*URL para testar:
-    http://localhost:8081/payments/cpf/SEUCPFAQUI?page=0&size=10
+    http://localhost:8087/payments/cpf/SEUCPFAQUI?page=0&size=10
     * */
     @Operation(summary = "Obter pagamentos por CPF [URL PATH]", description = "Recupera os pagamentos associados" +
             " a um CPF específico fornecido via URL.")
@@ -105,7 +108,7 @@ public class PaymentController {
     }
 
     /*exemplo de URL para o get abaixo:
-     * http://localhost:8080/payments?page=0&size=10
+     * http://localhost:8087/payments?page=0&size=10
      * Necessário ajustar no postman um Header: KEY: cpf , VALUE: o número do cpf pesquisado.
      * */
     @Operation(summary = "Obter pagamentos por CPF [HEADER]", description = "Recupera os pagamentos associados" +
@@ -129,20 +132,44 @@ public class PaymentController {
         }
     }
 
+
     @Operation(summary = "Processar pagamento", description = "Processa um pagamento com as" +
-            " informações fornecidas, requisitando API externa e gravando no banco de dados.")
+            " informações fornecidas (Header: token; URI: orderId), requisitando API externa e gravando no banco de dados.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Pagamento criado com sucesso. Obs: não necessariamente a operação" +
                     " de pagamento foi confirmada."),
             @ApiResponse(responseCode = "400", description = "Requisição inválida."),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor.")
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor."),
+            @ApiResponse(responseCode =  "404", description = "ID do pedido é inválido."),
+            @ApiResponse(responseCode = "403", description = "Acesso negado.")
     })
-    @PostMapping
-    public ResponseEntity<PaymentReadDTO> processPayment(@RequestBody @Valid PaymentWriteDTO payment) {
+    @PostMapping("/pay/{orderId}")
+    public ResponseEntity<PaymentReadDTO> processPayment(@RequestBody @Valid CardDTO cardInfo,
+                                                         @RequestParam UUID orderId,
+                                                         @RequestHeader String token) {
+        if(jwtService.isTokenExpired(token))
+            throw new TokenExpiredException("Token expirado. Realize o login e tente novamente.");
+
+        UserInfoDTO userInfoDTO;
+        OrderDTO orderDTO;
+
         try {
+            orderDTO = paymentService.getOrderByIdFromFeign(orderId);
+            userInfoDTO = jwtService.extractUserInfo(token);
+            if(!paymentService.compareUserId(orderDTO.getCustomerId(), userInfoDTO.getUserId()))
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+
+            PaymentWriteDTO payment = new PaymentWriteDTO(
+                    orderDTO.getOrderId().toString(), orderDTO.getTotalAmount(), userInfoDTO.getCpf(),
+                    cardInfo.nameCard(), cardInfo.numberCard(), cardInfo.dueDate(), cardInfo.code(),
+                    userInfoDTO.getUserId(), userInfoDTO.getName(), userInfoDTO.getEmail());
+
             PaymentReadDTO processedPayment = paymentService.processPayment(payment);
             return ResponseEntity.status(HttpStatus.CREATED).body(processedPayment); // 201 Created
-        } catch (IllegalArgumentException e) {
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); //OrderId é inválido.
+        }
+        catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(null); // 400 Bad Request
         } catch (Exception e) {

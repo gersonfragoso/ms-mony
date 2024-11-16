@@ -4,10 +4,12 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mony.payment.model.dtos.UserInfoDTO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.UUID;
 
+@Service
 public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
@@ -29,12 +31,13 @@ public class JwtService {
         String email = decodedJWT.getSubject();  // "sub" (email)
         String userId = decodedJWT.getClaim("userId").asString();  // "userId"
         String name = decodedJWT.getClaim("username").asString();  // "username" (nome)
-
+        String cpf = decodedJWT.getClaim("cpf").asString();
         // Criando o DTO e preenchendo com as informações extraídas do token
         UserInfoDTO userInfoDTO = new UserInfoDTO();
         userInfoDTO.setUserId(UUID.fromString(userId));  // Convertendo o userId para UUID
         userInfoDTO.setEmail(email);
         userInfoDTO.setName(name);
+        userInfoDTO.setCpf(cpf);
 
         return userInfoDTO;
     }

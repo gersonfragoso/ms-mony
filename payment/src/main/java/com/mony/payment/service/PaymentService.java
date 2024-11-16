@@ -54,9 +54,10 @@ public class PaymentService {
         }
     }
 
-    public boolean compareOrderId(UUID userIdFromOrder, UUID userIdFromToken){
+    public boolean compareUserId(UUID userIdFromOrder, UUID userIdFromToken){
         return userIdFromOrder.equals(userIdFromToken);
     }
+
 
 
     public PaymentReadDTO processPayment(PaymentWriteDTO paymentWriteDTO) {
