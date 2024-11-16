@@ -16,14 +16,15 @@ import java.util.UUID;
 public class OrderItemModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     private String productName;
     private Integer quantity;
     private BigDecimal price;
 
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private OrderModel order;
 }

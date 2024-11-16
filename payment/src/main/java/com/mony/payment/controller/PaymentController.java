@@ -145,7 +145,7 @@ public class PaymentController {
     })
     @PostMapping("/pay/{orderId}")
     public ResponseEntity<PaymentReadDTO> processPayment(@RequestBody @Valid CardDTO cardInfo,
-                                                         @RequestParam UUID orderId,
+                                                         @PathVariable UUID orderId,
                                                          @RequestHeader String token) {
         if(jwtService.isTokenExpired(token))
             throw new TokenExpiredException("Token expirado. Realize o login e tente novamente.");
@@ -155,6 +155,9 @@ public class PaymentController {
 
         try {
             orderDTO = paymentService.getOrderByIdFromFeign(orderId);
+            if(orderDTO!=null)
+                orderDTO.setOrderId(orderId);
+            System.out.println(orderDTO.toString());
             userInfoDTO = jwtService.extractUserInfo(token);
             if(!paymentService.compareUserId(orderDTO.getCustomerId(), userInfoDTO.getUserId()))
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);

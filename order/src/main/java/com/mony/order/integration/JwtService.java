@@ -1,5 +1,5 @@
 package com.mony.order.integration;
-/*
+
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import com.mony.order.dto.UserInfoDTO;
@@ -17,15 +17,15 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    /*public String validateToken(String token) {
+    public String validateToken(String token) {
         DecodedJWT decodedJWT = JWT.decode(token);
         String payload = decodedJWT.getPayload();
         byte[] decodedBytes = Base64.getUrlDecoder().decode(payload);
         String decodedPayload = new String(decodedBytes, StandardCharsets.UTF_8);
 
         return "Payload: " + decodedPayload;
-    }*/
-/*
+    }
+
     public UserInfoDTO extractUserInfo(String token) {
         // Decodificando o token JWT
         DecodedJWT decodedJWT = JWT.decode(token);
@@ -33,13 +33,15 @@ public class JwtService {
         // Recuperando as informações do token
         String email = decodedJWT.getSubject();  // "sub" (email)
         String userId = decodedJWT.getClaim("userId").asString();  // "userId"
-        String name = decodedJWT.getClaim("username").asString();  // "username" (nome)
+        String name = decodedJWT.getClaim("username").asString();// "username" (nome)
+        String cpf = decodedJWT.getClaim("cpf").asString(); //cpf
 
         // Criando o DTO e preenchendo com as informações extraídas do token
         UserInfoDTO userInfoDTO = new UserInfoDTO();
         userInfoDTO.setUserId(UUID.fromString(userId));  // Convertendo o userId para UUID
         userInfoDTO.setEmail(email);
         userInfoDTO.setName(name);
+        userInfoDTO.setCpf(cpf);
 
         return userInfoDTO;
     }
@@ -55,4 +57,3 @@ public class JwtService {
 
 }
 
-*/

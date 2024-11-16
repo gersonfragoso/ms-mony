@@ -1,6 +1,6 @@
 package com.mony.order.dto;
 
-/*
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,5 +11,5 @@ public class UserInfoDTO {
     private UUID userId;
     private String name;
     private String email;
+    private String cpf;
 }
-*/

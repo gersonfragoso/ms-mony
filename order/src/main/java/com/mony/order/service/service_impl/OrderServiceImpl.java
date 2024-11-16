@@ -9,6 +9,7 @@ import com.mony.order.model.OrderModel;
 import com.mony.order.repository.OrderItemRepository;
 import com.mony.order.repository.OrderRepository;
 import com.mony.order.service.OrderService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,21 +36,25 @@ public class OrderServiceImpl implements OrderService {
     private AccountFeignClient accountFeignClient;
 */
     @Override
-    public OrderDTO createOrder(OrderDTO orderDTO, UUID userId) {
-        OrderModel orderModel = orderMapper.toModel(orderDTO);
-        orderModel.setCustomerId(userId);
+    @Transactional
+    public OrderDTO createOrder(OrderDTO orderDTO) {
+        // Converte o DTO para modelo (entidade)
+        OrderModel orderModel = OrderMapper.toModel(orderDTO);
         orderModel.setStatus(OrderStatus.PENDING);
 
+        // Calcula o total do pedido
         BigDecimal totalAmount = orderModel.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         orderModel.setTotalAmount(totalAmount);
 
+        // Garante que todos os itens estão associados ao pedido
         orderModel.getItems().forEach(item -> item.setOrder(orderModel));
 
-        OrderModel savedOrder = orderRepository.save(orderModel);
+        // Persiste o pedido e seus itens
+        OrderModel savedOrder = orderRepository.save(orderModel); // Isso vai salvar o pedido e seus itens devido ao Cascade
 
-        return orderMapper.toDTO(savedOrder);
+        return OrderMapper.toDTO(savedOrder);
     }
 
     @Override
@@ -57,13 +62,13 @@ public class OrderServiceImpl implements OrderService {
         OrderModel orderModel = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID: " + orderId));
 
-        orderModel.setOrderDate(orderDTO.orderDate());
-        orderModel.setTotalAmount(orderDTO.totalAmount());
-        orderModel.setCustomerId(orderDTO.customerId());
+        orderModel.setOrderDate(orderDTO.getOrderDate());
+        orderModel.setTotalAmount(orderDTO.getTotalAmount());
+        orderModel.setCustomerId(orderDTO.getCustomerId());
 
         orderModel.getItems().clear();
 
-        List<OrderItemModel> updatedItems = orderDTO.items().stream()
+        List<OrderItemModel> updatedItems = orderDTO.getItems().stream()
                 .map(itemDTO -> {
                     OrderItemModel item = new OrderItemModel();
                     item.setProductName(itemDTO.productName());
@@ -78,7 +83,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderModel updatedOrder = orderRepository.save(orderModel);
 
-        return orderMapper.toDTO(updatedOrder);
+        return OrderMapper.toDTO(updatedOrder);
     }
 
     @Override

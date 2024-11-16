@@ -16,13 +16,13 @@ public class OrderMapper {
     // Converte de OrderDTO para OrderModel
     public static OrderModel toModel(OrderDTO orderDTO) {
         OrderModel orderModel = new OrderModel();
-        orderModel.setId(orderDTO.id());
-        orderModel.setOrderDate(orderDTO.orderDate());
-        orderModel.setTotalAmount(orderDTO.totalAmount());
-        orderModel.setCustomerId(UUID.fromString(orderDTO.customerId().toString()));
+        orderModel.setId(orderDTO.getId());
+        orderModel.setOrderDate(orderDTO.getOrderDate());
+        orderModel.setTotalAmount(orderDTO.getTotalAmount());
+        orderModel.setCustomerId(UUID.fromString(orderDTO.getCustomerId().toString()));
 
         // Converte os itens manualmente
-        List<OrderItemModel> items = orderDTO.items().stream()
+        List<OrderItemModel> items = orderDTO.getItems().stream()
                 .map(OrderItemMapper::toModel)
                 .collect(Collectors.toList());
         orderModel.setItems(items);
@@ -35,14 +35,17 @@ public class OrderMapper {
         List<OrderItemDTO> itemsDTO = orderModel.getItems().stream()
                 .map(OrderItemMapper::toDTO)
                 .collect(Collectors.toList());
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setId(orderModel.getId());
+        orderDTO.setOrderDate(orderModel.getOrderDate());
+        orderDTO.setCustomerId(UUID.fromString(orderModel.getCustomerId().toString()));
+        orderDTO.setTotalAmount(orderModel.getTotalAmount());
+        orderDTO.setItems(itemsDTO);
+        orderDTO.setStatus(orderModel.getStatus().toString());
 
-        return new OrderDTO(
-                orderModel.getId(),
-                orderModel.getOrderDate(),
-                orderModel.getTotalAmount(),
-                itemsDTO,
-                orderModel.getCustomerId()
-        );
+        return orderDTO;
+
+
     }
 
     // Método para converter uma lista de OrderModels para OrderDTOs
