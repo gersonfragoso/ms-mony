@@ -15,11 +15,13 @@ public class OrderDTO {
     private UUID orderId;
     private BigDecimal totalAmount;
     private UUID customerId;
+    private String status;
 
-    OrderDTO(UUID orderId, BigDecimal totalAmount, UUID customerId) {
+    OrderDTO(UUID orderId, BigDecimal totalAmount, UUID customerId, String status) {
         this.orderId = orderId;
         this.totalAmount = totalAmount;
         this.customerId = customerId;
+        this.status = status;
     }
 
 

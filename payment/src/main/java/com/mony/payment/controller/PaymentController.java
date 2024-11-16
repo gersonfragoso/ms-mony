@@ -1,6 +1,8 @@
 package com.mony.payment.controller;
 
+import com.mony.payment.exception.ExpiredCardException;
 import com.mony.payment.exception.TokenExpiredException;
+import com.mony.payment.exception.TokenUserIdMismatchException;
 import com.mony.payment.integration.JwtService;
 import com.mony.payment.model.dtos.*;
 import com.mony.payment.service.PaymentService;
@@ -147,37 +149,23 @@ public class PaymentController {
     public ResponseEntity<PaymentReadDTO> processPayment(@RequestBody @Valid CardDTO cardInfo,
                                                          @PathVariable UUID orderId,
                                                          @RequestHeader String token) {
-        if(jwtService.isTokenExpired(token))
+        if (jwtService.isTokenExpired(token)) {
             throw new TokenExpiredException("Token expirado. Realize o login e tente novamente.");
-
-        UserInfoDTO userInfoDTO;
-        OrderDTO orderDTO;
-
-        try {
-            orderDTO = paymentService.getOrderByIdFromFeign(orderId);
-            if(orderDTO!=null)
-                orderDTO.setOrderId(orderId);
-            System.out.println(orderDTO.toString());
-            userInfoDTO = jwtService.extractUserInfo(token);
-            if(!paymentService.compareUserId(orderDTO.getCustomerId(), userInfoDTO.getUserId()))
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-
-            PaymentWriteDTO payment = new PaymentWriteDTO(
-                    orderDTO.getOrderId().toString(), orderDTO.getTotalAmount(), userInfoDTO.getCpf(),
-                    cardInfo.nameCard(), cardInfo.numberCard(), cardInfo.dueDate(), cardInfo.code(),
-                    userInfoDTO.getUserId(), userInfoDTO.getName(), userInfoDTO.getEmail());
-
-            PaymentReadDTO processedPayment = paymentService.processPayment(payment);
-            return ResponseEntity.status(HttpStatus.CREATED).body(processedPayment); // 201 Created
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); //OrderId é inválido.
         }
-        catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(null); // 400 Bad Request
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null); // 500 Internal Server Error
+
+        OrderDTO orderDTO = paymentService.getOrderByIdFromFeign(orderId);
+
+        UserInfoDTO userInfoDTO = jwtService.extractUserInfo(token);
+        if (!paymentService.compareUserId(orderDTO.getCustomerId(), userInfoDTO.getUserId())) {
+            throw new TokenUserIdMismatchException("Erro: Usuário não corresponde ao comprador.");
         }
+
+        PaymentWriteDTO payment = new PaymentWriteDTO(
+                orderDTO.getOrderId().toString(), orderDTO.getTotalAmount(), userInfoDTO.getCpf(),
+                cardInfo.nameCard(), cardInfo.numberCard(), cardInfo.dueDate(), cardInfo.code(),
+                userInfoDTO.getUserId(), userInfoDTO.getName(), userInfoDTO.getEmail());
+
+        PaymentReadDTO processedPayment = paymentService.processPayment(payment, orderDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(processedPayment);
     }
 }
