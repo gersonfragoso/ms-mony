@@ -50,7 +50,7 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Define sessão stateless
                 .authorizeHttpRequests(
                         authorizeRequests -> authorizeRequests
-                                .requestMatchers("/api/users/login", "/api/users/register").permitAll() // Permite acesso livre a login e registro
+                                .requestMatchers("/api/users/login", "/api/users/register","/api/users/validate-otp").permitAll() // Permite acesso livre a login e registro
                                 .anyRequest().authenticated() // Requer autenticação para qualquer outra solicitação
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)  // Adiciona o filtro customizado antes do filtro de autenticação padrão

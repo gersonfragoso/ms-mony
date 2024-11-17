@@ -6,6 +6,10 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.mony.account.dto.UserDTO;
 import com.mony.account.dto.request_dto.LoginRequestDTO;
 import com.mony.account.dto.request_dto.UserUpdateDTO;
+import com.mony.account.exceptions.CpfAlreadyInUseException;
+import com.mony.account.exceptions.EmailAlreadyInUseException;
+import com.mony.account.exceptions.OtpExpiredOrInvalidException;
+import com.mony.account.exceptions.UserNotFoundException;
 import com.mony.account.mapper.UserMapper;
 import com.mony.account.model.UserAuth;
 import com.mony.account.model.UserModel;
@@ -28,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -42,6 +47,8 @@ public class UserServiceImpl {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private TokenService tokenService;
+    @Autowired
+    private OtpService otpService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -65,53 +72,69 @@ public class UserServiceImpl {
                 .toList();
     }
 
-    public String login(LoginRequestDTO loginRequestDTO) {
-        String email = loginRequestDTO.getEmail();
-        String password = loginRequestDTO.getPassword();
-
-        // Buscando o UserModel do banco de dados
-        UserModel user = userRepository.findByEmail(email)
+    public String initiateLogin(LoginRequestDTO loginRequestDTO) {
+        UserModel user = userRepository.findByEmail(loginRequestDTO.getEmail())
                 .orElseThrow(() -> new AuthenticationCredentialsNotFoundException("Usuário não encontrado"));
 
-        // Criando o token de autenticação
-        var token = new UsernamePasswordAuthenticationToken(email, password);
-        var authentication = authenticationManager.authenticate(token);
-
-        // Verificando a senha
-        if (passwordEncoder.matches(password, user.getPassword())) {
-            // Se a senha for válida, gera o OTP
-            //return generateOtp(user.getId());
-            return tokenService.generateToken(user);
-        } else {
-            throw new AuthenticationCredentialsNotFoundException("Usuário ou senha inválidos");
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
+            throw new AuthenticationCredentialsNotFoundException("Credenciais inválidas");
         }
+
+        // Gera o OTP e o envia ao usuário
+        String otp = otpService.generateOtp(user.getId());
+        log.info("OTP gerado: {}", otp);
+
+        // Simulação de envio do OTP (e-mail ou SMS pode ser integrado aqui)
+        // emailService.sendOtp(user.getEmail(), otp);
+
+        return "OTP enviado com sucesso.";
+    }
+
+
+    public String validateOtpAndGenerateToken(String otpCode) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // Obtém o registro ativo e não expirado do OTP mais recente
+        UserAuth userAuth = userAuthRepository.findFirstByOtpCodeAndUsedFalseAndExpirationTimeAfter(otpCode, now);
+
+        if (userAuth == null) {
+            throw new OtpExpiredOrInvalidException("OTP inválido ou expirado");
+        }
+
+        // Verifica se o OTP é o mais recente para o usuário
+        UserAuth latestOtp = userAuthRepository.findFirstByUserIdAndUsedFalseAndExpirationTimeAfterOrderByExpirationTimeDesc(userAuth.getUserId(),now);
+
+        // Se o OTP passado não for o mais recente, é considerado inválido
+        if (!userAuth.getOtpCode().equals(latestOtp.getOtpCode())) {
+            throw new OtpExpiredOrInvalidException("Este OTP não é mais válido. Um novo OTP foi gerado.");
+        }
+
+        // Marca o OTP como usado
+        userAuth.markAsUsed();
+        userAuthRepository.save(userAuth);
+
+        // Obtém o usuário associado ao OTP
+        UserModel user = userRepository.findById(userAuth.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        // Gera e retorna o token JWT
+        return tokenService.generateToken(user, otpCode);
     }
 
 
 
 
-    private String generateOtp(UUID id) {
-        UserAuth userAuth = userAuthRepository.findActiveByUserId(id);
-        String otpCode;
-        if (userAuth != null) {
-            otpCode = userAuth.getOtpCode();
-        } else {
-            otpCode = SecurityHelper.createOtpCode();
-            userAuthRepository.save(new UserAuth(id, otpCode, false));
-        }
-        return otpCode;
+
+    public void deleteUser(String token) {
+        // Extrair o userId do token
+        String userId = extractUserIdFromToken(token);
+        // Buscar o usuário pelo userId
+        UserModel user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+        // Excluir o usuário
+        userRepository.delete(user);
     }
 
-
-    public void deleteUser(String Cpf) {
-        Optional<UserModel> user = userRepository.findByCpf(Cpf);
-        if (userRepository.existsByCpf(Cpf)) {
-            userRepository.deleteByCpf(Cpf);
-            ResponseEntity.noContent().build();
-            return;
-        }
-        ResponseEntity.notFound().build();
-    }
 
     public void updateUser(String token, UserUpdateDTO userDTO) {
         // Extrair o userId do token
@@ -145,33 +168,42 @@ public class UserServiceImpl {
             throw new RuntimeException("Token inválido ou expirado", e);
         }
     }
+    public String extractUserOtpFromToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secretKey);
+            return JWT.require(algorithm)
+                    .withIssuer("solutis-squad1")
+                    .build()
+                    .verify(token)
+                    .getClaim("otp")
+                    .asString();
+        } catch (JWTVerificationException e) {
+            throw new RuntimeException("Token inválido ou expirado", e);
+        }
+    }
 
 
     private void validateEmail(String email) {
-        Optional<UserModel> emailsSaved = userRepository.findByEmail(email);
-        if (emailsSaved.isPresent()) {
-            throw new EntityExistsException("Email já está em uso");
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new EmailAlreadyInUseException("Email já está em uso");
         }
     }
-    private UserDTO detailUser(UUID userId){
-        UserModel user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
+    public UserDTO detailUser(String token) {
+        // Extrair o userId do token
+        String userId = extractUserIdFromToken(token);
+
+        // Buscar o usuário no repositório
+        UserModel user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        // Converter e retornar como DTO
         return UserMapper.toDTO(user);
     }
-    //so pra subir
 
-    private void validateCpf(String cpf){
-        boolean cpfSalvo = userRepository.existsByCpf(cpf);
-        if (cpfSalvo){
-            throw new EntityExistsException("Cpf em uso");
+    private void validateCpf(String cpf) {
+        if (userRepository.existsByCpf(cpf)) {
+            throw new CpfAlreadyInUseException("CPF já está em uso");
         }
-    }
-    public Boolean validateOTP(String otpCode){
-
-        return userAuthRepository.findActiveByOtpCode(otpCode) != null;
-    }
-
-    public UserAuth getOtpEntity(String otpCode) {
-        return userAuthRepository.findActiveByOtpCode(otpCode);
     }
 
 }
