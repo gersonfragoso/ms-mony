@@ -1,5 +1,7 @@
 package com.mony.order.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -31,5 +33,20 @@ public class CustomExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+    // Exceção para token expirado
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<String> handleExpiredToken(ExpiredJwtException ex) {
+        // Retorna uma mensagem personalizada para quando o token estiver expirado
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Token expirado. Por favor, faça login novamente.");
+    }
+
+    // Exceção para token inválido (malformado ou outro erro de JWT)
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<String> handleInvalidToken(JwtException ex) {
+        // Retorna uma mensagem personalizada para quando o token for inválido
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Token inválido. Por favor, forneça um token válido.");
     }
 }

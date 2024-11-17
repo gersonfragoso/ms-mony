@@ -29,46 +29,36 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    /*@PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public OrderDTO createOrder(@Valid @RequestBody OrderDTO orderDTO, @RequestParam UUID userId) {
-        return orderService.createOrder(orderDTO, userId);
-    }*/
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderDTO createOrder(@Valid @RequestBody OrderDTO orderDTO, @RequestHeader String token) {
-        // Verifica se o token está expirado
-        if (jwtService.isTokenExpired(token)) {
-            throw new ResourceNotFoundException("Token expirado.");
-        }
-
         try {
-            // Extrai as informações do token
+            if (jwtService.isTokenExpired(token)) {
+                throw new ResourceNotFoundException("Token expirado.");
+            }
+
             UserInfoDTO userInfoDTO = jwtService.extractUserInfo(token);
 
-            // Verifica se o userId foi extraído corretamente
             if (userInfoDTO.getUserId() == null) {
                 throw new ResourceNotFoundException("User ID não encontrado no token.");
             }
 
-            // Chama o serviço para criar o pedido
             orderDTO.setOrderDate(LocalDate.now());
             orderDTO.setCustomerId(userInfoDTO.getUserId());
             return orderService.createOrder(orderDTO);
-
-        } catch (IllegalArgumentException e) {
-            // Lidar com o caso de erro ao converter userId para UUID
-            throw new ResourceNotFoundException("User ID inválido no token.");
         } catch (Exception e) {
-            // Captura outras exceções e retorna uma mensagem genérica
-            throw new ResourceNotFoundException("Erro ao processar o token.");
+            throw new ResourceNotFoundException("Erro ao processar o token ou token inválido.");
         }
     }
 
     @PutMapping("/{orderId}")
     public OrderDTO updateOrder(@PathVariable UUID orderId, @Valid @RequestBody OrderDTO orderDTO) {
         return orderService.updateOrder(orderId, orderDTO);
+    }
+
+    @PutMapping("/cart/{orderId}")
+    public OrderDTO updateOrderCart(@PathVariable UUID orderId, @Valid @RequestBody OrderDTO orderDTO) {
+        return orderService.updateOrderCart(orderId, orderDTO);
     }
 
     @GetMapping("/{orderId}")

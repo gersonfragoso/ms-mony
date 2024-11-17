@@ -31,10 +31,6 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
-    /*
-    @Autowired
-    private AccountFeignClient accountFeignClient;
-*/
     @Override
     @Transactional
     public OrderDTO createOrder(OrderDTO orderDTO) {
@@ -52,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
         orderModel.getItems().forEach(item -> item.setOrder(orderModel));
 
         // Persiste o pedido e seus itens
-        OrderModel savedOrder = orderRepository.save(orderModel); // Isso vai salvar o pedido e seus itens devido ao Cascade
+        OrderModel savedOrder = orderRepository.save(orderModel);
 
         return OrderMapper.toDTO(savedOrder);
     }
@@ -73,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
             orderModel.setStatus(OrderStatus.COMPLETED);
         else if (orderDTO.getStatus().equalsIgnoreCase(OrderStatus.PROCESSING.toString()))
 
-        orderModel.getItems().clear();
+            orderModel.getItems().clear();
 
         List<OrderItemModel> updatedItems = orderDTO.getItems().stream()
                 .map(itemDTO -> {
@@ -87,6 +83,32 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
 
         orderModel.getItems().addAll(updatedItems); // Adicionar os novos itens à lista existente
+
+        OrderModel updatedOrder = orderRepository.save(orderModel);
+
+        return OrderMapper.toDTO(updatedOrder);
+    }
+
+    // Método para atualizar o carrinho sem modificar o status do pedido
+    @Override
+    public OrderDTO updateOrderCart(UUID orderId, OrderDTO orderDTO) {
+        OrderModel orderModel = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID: " + orderId));
+
+        orderModel.getItems().clear();
+
+        List<OrderItemModel> updatedItems = orderDTO.getItems().stream()
+                .map(itemDTO -> {
+                    OrderItemModel item = new OrderItemModel();
+                    item.setProductName(itemDTO.productName());
+                    item.setQuantity(itemDTO.quantity());
+                    item.setPrice(itemDTO.price());
+                    item.setOrder(orderModel); // Associa o item ao pedido
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        orderModel.getItems().addAll(updatedItems);
 
         OrderModel updatedOrder = orderRepository.save(orderModel);
 

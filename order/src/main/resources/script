@@ -26,48 +26,36 @@ __________________________________________________
 teste requisições
 
 
-POST http://localhost:8082/orders
+POST http://localhost:8085/orders
 
 {
-    "orderDate": "2024-11-12",
-    "totalAmount": 200.0,
-    "status": "PENDING",
-    "customerId": 1,
     "items": [
         {
-            "productName": "Produto A",
-            "quantity": 2,
-            "price": 50.0
+            "productName": "produto",
+            "quantity": 3,
+            "price": 3.0
         }
     ]
 }
 __________________________________________________
 
-GET http://localhost:8082/orders
-GET http://localhost:8082/orders/{id}
+GET http://localhost:8085/orders
+GET http://localhost:8085/orders/{id}
 __________________________________________________
 
-PUT http://localhost:8082/orders/1
+PUT http://localhost:8085/orders/cart/{id}
 
 {
-    "orderDate": "2024-11-12",
-    "totalAmount": 200.0,
-    "status": "PENDING",
-    "customerId": 1,
     "items": [
         {
-            "productName": "Produto Z",
-            "quantity": 4,
-            "price": 55.0,
-            "orderId": 1
-        },
-        {
-            "productName": "Produto E",
+            "productName": "Algum Produto",
             "quantity": 2,
-            "price": 95.0,
-            "orderId": 1
+            "price": 1.0
         }
     ]
 }
 
 __________________________________________________
+
+DELETE http://localhost:8085/orders
+DELETE http://localhost:8085/orders/{id}

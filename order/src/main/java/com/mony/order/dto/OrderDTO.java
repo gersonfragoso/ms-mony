@@ -1,9 +1,6 @@
 package com.mony.order.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +14,6 @@ import java.util.UUID;
 @Setter
 public class OrderDTO {
 
-    @PastOrPresent(message = "A data do pedido não pode ser no futuro")
     private LocalDate orderDate;
 
     private BigDecimal totalAmount;
