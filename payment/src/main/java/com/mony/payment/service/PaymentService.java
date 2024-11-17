@@ -1,5 +1,9 @@
 package com.mony.payment.service;
 
+import com.mony.order.enums.OrderStatus;
+import com.mony.payment.exception.ExpiredCardException;
+import com.mony.payment.exception.OrderNotFoundException;
+import com.mony.payment.exception.OrderStatusException;
 import com.mony.payment.integration.OrderFeignClient;
 import com.mony.payment.mapper.PaymentMapper;
 import com.mony.payment.model.PaymentModel;
@@ -44,14 +48,30 @@ public class PaymentService {
         this.orderFeignClient = orderFeignClient;
     }
 
-    public OrderDTO getOrderByIdFromFeign(UUID orderId) {
+    public OrderDTO getOrderByIdFromFeign(UUID orderId){
         try{
             OrderDTO orderDTO;
             orderDTO = orderFeignClient.getOrderById(orderId);
+            if(orderDTO==null)
+                throw new OrderNotFoundException("Pedido não encontrado para o ID: "+orderId);
+
+            if(orderDTO.getCustomerId()!=null)
+                orderDTO.setOrderId(orderId);
+
             return orderDTO;
-        } catch(EntityNotFoundException e){
+        } catch(OrderNotFoundException e){
             return null;
         }
+    }
+
+    public void updateOrderStatus(UUID orderId, OrderDTO orderDTO, PaymentStatus status){
+        if(status.equals(PaymentStatus.CANCELLED)){
+            orderDTO.setStatus(OrderStatus.CANCELLED.toString());
+        } else if(status.equals(PaymentStatus.CONFIRMED)){
+            orderDTO.setStatus(OrderStatus.COMPLETED.toString());
+        }
+        orderFeignClient.updateOrderById(orderId, orderDTO);
+
     }
 
     public boolean compareUserId(UUID userIdFromOrder, UUID userIdFromToken){
@@ -60,31 +80,45 @@ public class PaymentService {
 
 
 
-    public PaymentReadDTO processPayment(PaymentWriteDTO paymentWriteDTO) {
+    public PaymentReadDTO processPayment(PaymentWriteDTO paymentWriteDTO, OrderDTO orderDTO) {
         PaymentModel paymentModel = PaymentMapper.toEntity(paymentWriteDTO);
         paymentModel.setPaymentDate(LocalDateTime.now());
         paymentModel.setPaymentStatus(PaymentStatus.CONFIRMED);
 
         try {
-            if(!verifyDueDateCard(paymentWriteDTO.dueDate())) {
+            if (!verifyDueDateCard(paymentWriteDTO.dueDate())) {
                 paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
-                System.out.println("Cartao vencido");
-            }
-            else if (!paymentGateway.processPayment(paymentWriteDTO)){
+                throw new ExpiredCardException("Não foi possível processar pagamento. Cartão vencido.");
+            } else if (!paymentGateway.processPayment(paymentWriteDTO)) {
                 paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
             }
+            if(!verifyOrderStatus(orderDTO))
+                throw new OrderStatusException("Pedido já foi pago ou está cancelado.");
 
             paymentModel = paymentRepository.save(paymentModel);
             paymentProducer.publishMessageEmail(paymentModel);
 
-        } catch (Exception e) {
+        } catch (ExpiredCardException | PaymentProcessingException e) {
             paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
-            paymentModel = paymentRepository.save(paymentModel);
-            throw new PaymentProcessingException("Erro no processamento do pagamento. Operação Cancelada.", e);
+            paymentRepository.save(paymentModel);
+            throw e; // Lança a exceção personalizada sem capturá-la no último catch
+        } catch (OrderStatusException e){
+            paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
+            paymentRepository.save(paymentModel);
+            throw e;
         }
+        catch (RuntimeException e) {
+            paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
+            paymentRepository.save(paymentModel);
+            throw new PaymentProcessingException("Erro inesperado no processamento do pagamento.", e);
+        }
+
+        if(verifyOrderStatus(orderDTO))
+            updateOrderStatus(orderDTO.getOrderId(), orderDTO, paymentModel.getPaymentStatus());
 
         return formatPaymentReadDTO(PaymentMapper.toReadDTO(paymentModel));
     }
+
 
     public PaymentReadDTO getPaymentById(UUID paymentId) {
         Optional<PaymentModel> optionalPaymentModel = paymentRepository.findById(paymentId);
@@ -123,5 +157,9 @@ public class PaymentService {
         YearMonth today = YearMonth.now();
         YearMonth dueDateFormatted = YearMonth.parse(dueDate, formatter);
         return dueDateFormatted.isAfter(today);
+    }
+
+    private boolean verifyOrderStatus(OrderDTO orderDTO){
+        return orderDTO.getStatus().equalsIgnoreCase("PENDING");
     }
 }
