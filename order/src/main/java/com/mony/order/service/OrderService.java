@@ -9,6 +9,7 @@ public interface OrderService {
 
     OrderDTO createOrder(OrderDTO orderDTO);
     OrderDTO updateOrder(UUID orderId, OrderDTO orderDTO);
+    OrderDTO updateOrderCart(UUID orderId, OrderDTO orderDTO);
     OrderDTO getOrderById(UUID orderId);
     List<OrderDTO> getAllOrders();
     void deleteOrder(UUID orderId);

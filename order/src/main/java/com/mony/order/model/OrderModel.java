@@ -25,7 +25,7 @@ public class OrderModel {
     private LocalDate orderDate;
     private BigDecimal totalAmount;
 
-    @Enumerated(EnumType.STRING)  // Para armazenar o valor do enum como string no banco de dados
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
