@@ -1,5 +1,6 @@
 package com.mony.payment.service;
 
+import com.mony.order.enums.OrderStatus;
 import com.mony.payment.exception.ExpiredCardException;
 import com.mony.payment.exception.OrderNotFoundException;
 import com.mony.payment.exception.OrderStatusException;
@@ -63,6 +64,16 @@ public class PaymentService {
         }
     }
 
+    public void updateOrderStatus(UUID orderId, OrderDTO orderDTO, PaymentStatus status){
+        if(status.equals(PaymentStatus.CANCELLED)){
+            orderDTO.setStatus(OrderStatus.CANCELLED.toString());
+        } else if(status.equals(PaymentStatus.CONFIRMED)){
+            orderDTO.setStatus(OrderStatus.COMPLETED.toString());
+        }
+        orderFeignClient.updateOrderById(orderId, orderDTO);
+
+    }
+
     public boolean compareUserId(UUID userIdFromOrder, UUID userIdFromToken){
         return userIdFromOrder.equals(userIdFromToken);
     }
@@ -94,6 +105,7 @@ public class PaymentService {
         } catch (OrderStatusException e){
             paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
             paymentRepository.save(paymentModel);
+            throw e;
         }
         catch (RuntimeException e) {
             paymentModel.setPaymentStatus(PaymentStatus.CANCELLED);
@@ -101,7 +113,8 @@ public class PaymentService {
             throw new PaymentProcessingException("Erro inesperado no processamento do pagamento.", e);
         }
 
-
+        if(verifyOrderStatus(orderDTO))
+            updateOrderStatus(orderDTO.getOrderId(), orderDTO, paymentModel.getPaymentStatus());
 
         return formatPaymentReadDTO(PaymentMapper.toReadDTO(paymentModel));
     }

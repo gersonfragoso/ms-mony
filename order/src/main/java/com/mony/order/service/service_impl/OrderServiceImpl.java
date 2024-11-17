@@ -65,6 +65,13 @@ public class OrderServiceImpl implements OrderService {
         orderModel.setOrderDate(orderDTO.getOrderDate());
         orderModel.setTotalAmount(orderDTO.getTotalAmount());
         orderModel.setCustomerId(orderDTO.getCustomerId());
+        if(orderDTO.getStatus().equalsIgnoreCase(OrderStatus.PENDING.toString()))
+            orderModel.setStatus(OrderStatus.PENDING);
+        else if(orderDTO.getStatus().equalsIgnoreCase(OrderStatus.CANCELLED.toString()))
+            orderModel.setStatus(OrderStatus.CANCELLED);
+        else if(orderDTO.getStatus().equalsIgnoreCase(OrderStatus.COMPLETED.toString()))
+            orderModel.setStatus(OrderStatus.COMPLETED);
+        else if (orderDTO.getStatus().equalsIgnoreCase(OrderStatus.PROCESSING.toString()))
 
         orderModel.getItems().clear();
 
