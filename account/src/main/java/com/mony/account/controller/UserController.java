@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -33,8 +34,15 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequestDTO loginRequestDTO) {
-        return ResponseEntity.ok().body(userService.login(loginRequestDTO));
+    public ResponseEntity<String> initiateLogin(@RequestBody LoginRequestDTO loginRequestDTO) {
+        String response = userService.initiateLogin(loginRequestDTO);
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/validate-otp")
+    public ResponseEntity<String> validateOtp(@RequestBody Map<String, String> request) {
+        String otpCode = request.get("otpCode");
+        String jwtToken = userService.validateOtpAndGenerateToken(otpCode);
+        return ResponseEntity.ok(jwtToken);
     }
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserModel data) {
@@ -58,10 +66,24 @@ public class UserController {
     }
 
 
-    @DeleteMapping
-    @SecurityRequirement(name = "bearer-key")
-    public ResponseEntity<?> deleteUser(@RequestHeader String cpf) {
-        userService.deleteUser(cpf);
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUser(@RequestHeader("Authorization") String authorizationHeader) {
+        // Extrair o token do cabeçalho
+        String token = authorizationHeader.replace("Bearer ", "");
+        // Chamar o serviço para excluir o usuário
+        userService.deleteUser(token);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+    @GetMapping("/detail")
+    public ResponseEntity<UserDTO> getUserDetails(@RequestHeader("Authorization") String authorizationHeader) {
+        // Extrair o token do cabeçalho
+        String token = authorizationHeader.replace("Bearer ", "");
+
+        // Obter os detalhes do usuário
+        UserDTO userDTO = userService.detailUser(token);
+
+        // Retornar como resposta
+        return ResponseEntity.ok(userDTO);
+    }
+
 }

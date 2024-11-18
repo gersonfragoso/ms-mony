@@ -1,19 +1,13 @@
 package com.mony.account.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.persistence.*;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @ToString
 public class UserAuth {
@@ -26,27 +20,22 @@ public class UserAuth {
 
     private String otpCode;
 
-    private Boolean isUsed = false;
+    private Boolean used = false;
+    @Column(name = "expiration_time")
+    private LocalDateTime expirationTime;
 
-    public UserAuth(UUID userId, String otpCode, Boolean isUsed) {
+    public UserAuth(UUID userId, String otpCode, Boolean used) {
         this.userId = userId;
         this.otpCode = otpCode;
-        this.isUsed = false;
+        this.used = false;
     }
 
-    /**
-     * Atualiza o código OTP e define isUsed como false para reutilização.
-     * @param newOtpCode Novo código OTP a ser definido.
-     */
     public void updateOtpCode(String newOtpCode) {
         this.otpCode = newOtpCode;
-        this.isUsed = false;
+        this.used = false;
     }
 
-    /**
-     * Marca o OTP como usado para evitar reuso.
-     */
     public void markAsUsed() {
-        this.isUsed = true;
+        this.used = true;
     }
 }
