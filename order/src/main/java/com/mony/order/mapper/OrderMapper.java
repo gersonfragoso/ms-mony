@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 @Component
 public class OrderMapper {
 
-    // Converte de OrderDTO para OrderModel
     public static OrderModel toModel(OrderDTO orderDTO) {
         OrderModel orderModel = new OrderModel();
         orderModel.setId(orderDTO.getId());
@@ -21,7 +20,6 @@ public class OrderMapper {
         orderModel.setTotalAmount(orderDTO.getTotalAmount());
         orderModel.setCustomerId(UUID.fromString(orderDTO.getCustomerId().toString()));
 
-        // Converte os itens manualmente
         List<OrderItemModel> items = orderDTO.getItems().stream()
                 .map(OrderItemMapper::toModel)
                 .collect(Collectors.toList());
@@ -30,7 +28,6 @@ public class OrderMapper {
         return orderModel;
     }
 
-    // Converte de OrderModel para OrderDTO
     public static OrderDTO toDTO(OrderModel orderModel) {
         List<OrderItemDTO> itemsDTO = orderModel.getItems().stream()
                 .map(OrderItemMapper::toDTO)
@@ -48,14 +45,12 @@ public class OrderMapper {
 
     }
 
-    // Método para converter uma lista de OrderModels para OrderDTOs
     public static List<OrderDTO> toDTOList(List<OrderModel> orderModels) {
         return orderModels.stream()
                 .map(OrderMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
-    // Método para converter uma lista de OrderDTOs para OrderModels
     public static List<OrderModel> toModelList(List<OrderDTO> orderDTOs) {
         return orderDTOs.stream()
                 .map(OrderMapper::toModel)

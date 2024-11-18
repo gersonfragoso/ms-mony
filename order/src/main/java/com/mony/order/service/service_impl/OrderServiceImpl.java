@@ -34,20 +34,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDTO createOrder(OrderDTO orderDTO) {
-        // Converte o DTO para modelo (entidade)
         OrderModel orderModel = OrderMapper.toModel(orderDTO);
         orderModel.setStatus(OrderStatus.PENDING);
 
-        // Calcula o total do pedido
         BigDecimal totalAmount = orderModel.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         orderModel.setTotalAmount(totalAmount);
 
-        // Garante que todos os itens estão associados ao pedido
         orderModel.getItems().forEach(item -> item.setOrder(orderModel));
 
-        // Persiste o pedido e seus itens
         OrderModel savedOrder = orderRepository.save(orderModel);
 
         return OrderMapper.toDTO(savedOrder);
@@ -82,14 +78,13 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .collect(Collectors.toList());
 
-        orderModel.getItems().addAll(updatedItems); // Adicionar os novos itens à lista existente
+        orderModel.getItems().addAll(updatedItems);
 
         OrderModel updatedOrder = orderRepository.save(orderModel);
 
         return OrderMapper.toDTO(updatedOrder);
     }
 
-    // Método para atualizar o carrinho sem modificar o status do pedido
     @Override
     public OrderDTO updateOrderCart(UUID orderId, OrderDTO orderDTO) {
         OrderModel orderModel = orderRepository.findById(orderId)

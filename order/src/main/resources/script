@@ -59,3 +59,8 @@ __________________________________________________
 
 DELETE http://localhost:8085/orders
 DELETE http://localhost:8085/orders/{id}
+
+
+cd
+
+locust -f locustfile.py

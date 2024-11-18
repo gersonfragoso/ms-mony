@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrderItemMapper {
 
-    // Converte de OrderItemDTO para OrderItemModel
     public static OrderItemModel toModel(OrderItemDTO orderItemDTO) {
         OrderItemModel orderItemModel = new OrderItemModel();
         orderItemModel.setId(orderItemDTO.id());
@@ -24,7 +23,6 @@ public class OrderItemMapper {
         return orderItemModel;
     }
 
-    // Converte de OrderItemModel para OrderItemDTO
     public static OrderItemDTO toDTO(OrderItemModel orderItemModel) {
         return new OrderItemDTO(
                 orderItemModel.getId(),

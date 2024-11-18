@@ -27,20 +27,18 @@ public class OrderDTO {
 
     private String status;
 
-    // Construtor padrão (sem argumentos) para permitir desserialização
     public OrderDTO() {
-        this.items = new ArrayList<>(); // Inicializa a lista de itens para evitar NPE
+        this.items = new ArrayList<>();
     }
 
-    // Construtor
     public OrderDTO(UUID id, LocalDate orderDate, BigDecimal totalAmount, UUID customerId, List<OrderItemDTO> items) {
         this.id = id;
         this.orderDate = orderDate;
         this.totalAmount = totalAmount;
         this.customerId = customerId;
-        // Inicializando a lista de itens para evitar NPE
+
         if (items == null) {
-            this.items = new ArrayList<>(); // Evita o NullPointerException
+            this.items = new ArrayList<>();
         } else {
             this.items = items;
         }
@@ -51,9 +49,9 @@ public class OrderDTO {
         this.orderDate = orderDate;
         this.totalAmount = totalAmount;
         this.customerId = customerId;
-        // Inicializando a lista de itens para evitar NPE
+
         if (items == null) {
-            this.items = new ArrayList<>(); // Evita o NullPointerException
+            this.items = new ArrayList<>();
         } else {
             this.items = items;
         }
