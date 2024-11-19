@@ -29,6 +29,8 @@ A Mony API foi construída utilizando as seguintes tecnologias:
 - **Spring Boot** ⚡: Framework usado para construir e configurar a API de forma rápida e eficiente.
 - **Spring Data JPA** 🗄️: Para facilitar a interação com o banco de dados e o mapeamento das entidades.
 - **Eureka (Spring Cloud)** 🌐: Para o gerenciamento e descoberta de microsserviços.
+- **Rabbit MQ** 🐰​: mensageria para envio de confirmações de pagamento por e-mail, utilizando comunicação assíncrona.
+- **Swagger** 📝​: para documentaçao dos endpoints das APIs de cada microsserviço.
 - **PostgreSQL** 🐘: Banco de dados utilizado para armazenar as informações de ordens, usuários, e pagamentos.
 - **Locust** 🦗: Ferramenta para realizar testes de carga na aplicação e garantir sua performance sob alta demanda.
 
